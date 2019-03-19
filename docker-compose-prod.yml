@@ -1,0 +1,37 @@
+version: '3.6'
+services:
+  vue-app:
+    container_name: 'vue-app'
+    image: 'frontend:latest'
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./config/production.env
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+      - ./dist:/app/dist
+      - ./Taskfile.yml:/app/Taskfile.yml
+      - ./package.json:/app/package.json
+      - ./yarn.lock:/app/yarn.lock
+      - ./.babelrc:/app/.babelrc
+    ports:
+      - "8081:8081"
+    working_dir: /app
+    command: [task, build-production]
+
+  nginx-app:
+    container_name: 'nginx-app'
+    image: nginx:1.15.9-alpine
+    volumes:
+      - ./dist:/app
+      - ./config/production.nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - vue-app
+    ports:
+      - "80:80"
+    restart: always
+    links:
+      - vue-app:vue-app
+    command: ["nginx", "-g", "daemon off;"]

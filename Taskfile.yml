@@ -1,0 +1,68 @@
+version: '2'
+
+tasks:
+  default:
+    cmds:
+      - task --list
+
+#Start\stop project
+  up:
+    desc: "Обновление зависимостей проекта"
+    cmds:
+      - yarn install
+
+  docker-dev:
+    desc: "Старт проекта"
+    cmds:
+      - docker-compose up --build
+
+  docker-prod:
+    desc: "Старт проекта"
+    cmds:
+      - docker-compose -f docker-compose-prod.yml up --build
+
+  frontend-dev:
+    cmds:
+      - yarn install
+      - ./node_modules/.bin/webpack-dev-server --config config/webpack.config.js
+
+#Test\lint section
+  lint:
+    desc: "Run eslint"
+    cmds:
+      - node_modules/.bin/eslint ./src --color --config ./config/.eslintrc.js --fix
+
+  test-build:
+    desc: "Build тесты проекта, только для тестирования sources"
+    cmds:
+      - node_modules/.bin/mocha ./test/mocha --exit --colors
+      
+#Docs section
+# doc-sass:
+#   desc: "Make frontend sass docs see docs/sass/index.html"
+#   cmds:
+#     - node_modules/.bin/sassdoc ./src/sass/_context.scss -d ./docs/sass
+
+# doc-js:
+#   desc: "Make frontend js doc see docs/js/index.html"
+#   cmds:
+#     - node_modules/.bin/esdoc -c  config/esdoc.conf.json
+
+# Build Section
+  build:
+    cmds:
+      - export $(cat ./config/{{.ENV}}.env | xargs) &&
+        ./node_modules/.bin/webpack --config config/webpack.config.js
+    
+  build-production:
+    desc: "Build bundle in production mode"
+    cmds:
+      - yarn install
+      - task: build
+        vars: {ENV: "production"}
+    
+  build-development:
+    desc: "Build bundle in development mode"
+    cmds:
+      - task: build
+        vars: {ENV: "development"}
